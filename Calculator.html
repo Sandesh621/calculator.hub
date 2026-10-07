@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Light Simple Calculator</title>
+    <title>Simple Calculator</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -11,8 +11,8 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* light slate bg */
-            color: #1e293b; /* dark slate text */
+            background-color: #f8fafc;
+            color: #1e293b;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -44,10 +44,11 @@
             padding: 0.5rem;
             word-wrap: break-word;
             word-break: break-all;
+            cursor: text;
         }
 
         .btn {
-            background-color: #f8fafc; /* very light gray */
+            background-color: #f8fafc;
             color: #334155;
             border-radius: 1.25rem;
             border: 1px solid #f1f5f9;
@@ -70,19 +71,19 @@
 
         .btn.operator {
             background-color: #f1f5f9;
-            color: #059669; /* Emerald */
+            color: #059669;
             font-weight: 500;
         }
 
         .btn.action {
             background-color: #f1f5f9;
-            color: #e11d48; /* Rose */
+            color: #e11d48;
             font-weight: 500;
         }
 
         .btn.special {
             background-color: #f1f5f9;
-            color: #2563eb; /* Blue */
+            color: #2563eb;
             font-weight: 500;
         }
 
@@ -107,13 +108,37 @@
         ::-webkit-scrollbar {
             display: none;
         }
+
+        /* --- Updated Cursor Styles --- */
+        .cursor-blink {
+            display: inline-block;
+            width: 1px; /* Thinner cursor */
+            height: 1.1em;
+            background-color: currentColor;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+            margin-right: -1px; /* Neutralizes the width to exactly 0px layout space */
+            transform: translateY(-0.05em);
+            pointer-events: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .char {
+            cursor: text;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
 
     <div class="calculator-container relative overflow-hidden">
         
-        <!-- History Toggle Button (Top Left) -->
         <button id="history-toggle" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="View History">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -121,7 +146,6 @@
             </svg>
         </button>
 
-        <!-- Edit Last Calculation Button (Top Right) -->
         <button id="edit-last" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="Edit Last Calculation">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"></path>
@@ -129,49 +153,41 @@
             </svg>
         </button>
 
-        <!-- Display Area -->
-        <div class="display-area mt-4">
+        <div id="display-area" class="display-area mt-4">
             <div id="display" class="text-5xl font-light w-full text-right overflow-x-auto whitespace-nowrap scrollbar-hide tracking-wide transition-all duration-100 ease-in-out text-slate-900">0</div>
         </div>
 
         <div class="grid grid-cols-4 gap-3">
-            <!-- Row 1 -->
             <button class="btn action text-2xl" data-action="clear">AC</button>
             <button class="btn special text-2xl" data-val="(">(</button>
             <button class="btn special text-2xl" data-val=")">)</button>
             <button class="btn action text-2xl" data-action="backspace">⌫</button>
 
-            <!-- Row 2 -->
             <button class="btn" data-val="7">7</button>
             <button class="btn" data-val="8">8</button>
             <button class="btn" data-val="9">9</button>
             <button class="btn operator text-3xl pb-1" data-val="÷">÷</button>
 
-            <!-- Row 3 -->
             <button class="btn" data-val="4">4</button>
             <button class="btn" data-val="5">5</button>
             <button class="btn" data-val="6">6</button>
             <button class="btn operator text-3xl pb-1" data-val="×">×</button>
 
-            <!-- Row 4 -->
             <button class="btn" data-val="1">1</button>
             <button class="btn" data-val="2">2</button>
             <button class="btn" data-val="3">3</button>
             <button class="btn operator text-4xl pb-1" data-val="-">-</button>
 
-            <!-- Row 5 -->
             <button class="btn special text-2xl" data-val="%">%</button>
             <button class="btn" data-val="0">0</button>
             <button class="btn text-3xl pb-2" data-val=".">.</button>
             <button class="btn operator text-3xl pb-1" data-val="+">+</button>
             
-            <!-- Row 6 -->
             <div class="col-span-4 h-14 mt-1">
                 <button class="btn equals text-4xl w-full" data-action="evaluate">=</button>
             </div>
         </div>
 
-        <!-- History Overlay Panel -->
         <div id="history-panel" class="absolute inset-0 bg-white/95 backdrop-blur-md z-20 flex flex-col p-6 translate-y-full rounded-[2.5rem] border border-slate-100 shadow-xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-medium text-slate-900">History</h3>
@@ -186,7 +202,6 @@
                 </div>
             </div>
             <div id="history-list" class="flex-1 overflow-y-auto text-right flex flex-col gap-2 scrollbar-hide pb-4">
-                <!-- History Items Render Here -->
                 <div class="text-slate-400 text-center mt-10">No history yet</div>
             </div>
             <button id="clear-history" class="w-full py-3 rounded-xl bg-rose-50 text-rose-600 font-medium hover:bg-rose-100 transition-colors mt-auto hidden">
@@ -205,61 +220,88 @@
         let currentInput = '0';
         let isEvaluated = false;
         let historyData = [];
+        let cursorPosition = 1;
 
-        // UI toggles
         function toggleHistory() {
             historyPanel.classList.toggle('translate-y-full');
         }
         document.getElementById('history-toggle').addEventListener('click', toggleHistory);
         document.getElementById('close-history').addEventListener('click', toggleHistory);
 
-        // Edit functionality for the specific Last button
+        document.getElementById('display-area').addEventListener('click', (e) => {
+            if (!e.target.closest('.char')) {
+                cursorPosition = currentInput.length;
+                updateDisplay();
+            }
+        });
+
         editLastBtn.addEventListener('click', () => {
             if (historyData.length > 0) {
                 const lastItem = historyData[historyData.length - 1];
                 currentInput = lastItem.expression.replace(/ =$/, '');
+                cursorPosition = currentInput.length;
                 isEvaluated = false;
                 updateDisplay();
             }
         });
 
-        // Edit functionality for selected history item
         historyList.addEventListener('click', (e) => {
             const itemElement = e.target.closest('.history-item');
             if (itemElement) {
                 const index = itemElement.getAttribute('data-index');
                 const selectedItem = historyData[index];
                 
-                // Load expression back to display
                 currentInput = selectedItem.expression.replace(/ =$/, '');
+                cursorPosition = currentInput.length;
                 isEvaluated = false;
                 
                 updateDisplay();
-                toggleHistory(); // Close panel so user can edit right away
+                toggleHistory(); 
             }
         });
 
         function updateDisplay() {
-            // Dynamically scale text down as the input gets longer
             display.classList.remove('text-5xl', 'text-4xl', 'text-3xl', 'text-2xl', 'text-xl');
-            
             const len = currentInput.length;
-            if (len > 22) {
-                display.classList.add('text-xl');
-            } else if (len > 15) {
-                display.classList.add('text-2xl');
-            } else if (len > 11) {
-                display.classList.add('text-3xl');
-            } else if (len > 8) {
-                display.classList.add('text-4xl');
-            } else {
-                display.classList.add('text-5xl');
-            }
+            if (len > 22) display.classList.add('text-xl');
+            else if (len > 15) display.classList.add('text-2xl');
+            else if (len > 11) display.classList.add('text-3xl');
+            else if (len > 8) display.classList.add('text-4xl');
+            else display.classList.add('text-5xl');
 
-            display.innerText = currentInput;
+            let newHTML = '';
+            for (let i = 0; i <= currentInput.length; i++) {
+                if (i === cursorPosition) {
+                    newHTML += `<span class="cursor-blink"></span>`;
+                }
+                if (i < currentInput.length) {
+                    newHTML += `<span class="char" data-index="${i}">${currentInput[i]}</span>`;
+                }
+            }
+            display.innerHTML = newHTML;
+
+            const chars = display.querySelectorAll('.char');
+            chars.forEach(char => {
+                char.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(char.getAttribute('data-index'));
+                    const rect = char.getBoundingClientRect();
+                    const clickX = e.clientX;
+                    
+                    if (clickX > rect.left + rect.width / 2) {
+                        cursorPosition = idx + 1;
+                    } else {
+                        cursorPosition = idx;
+                    }
+                    updateDisplay();
+                });
+            });
 
             requestAnimationFrame(() => {
-                display.scrollLeft = display.scrollWidth;
+                const cursorEl = display.querySelector('.cursor-blink');
+                if (cursorEl) {
+                    cursorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                }
             });
         }
 
@@ -291,12 +333,15 @@
                 } else {
                     currentInput += val;
                 }
+                cursorPosition = currentInput.length;
                 isEvaluated = false;
             } else {
-                if (currentInput === '0' && val !== '.' && !['+', '-', '×', '÷', '%'].includes(val)) {
+                if (currentInput === '0' && cursorPosition === 1 && val !== '.' && !['+', '-', '×', '÷', '%'].includes(val)) {
                     currentInput = val;
+                    cursorPosition = val.length;
                 } else {
-                    currentInput += val;
+                    currentInput = currentInput.slice(0, cursorPosition) + val + currentInput.slice(cursorPosition);
+                    cursorPosition += val.length;
                 }
             }
             updateDisplay();
@@ -304,6 +349,7 @@
 
         function clearCalc() {
             currentInput = '0';
+            cursorPosition = 1;
             isEvaluated = false;
             updateDisplay();
         }
@@ -313,10 +359,18 @@
                 clearCalc();
                 return;
             }
-            if (currentInput.length > 1) {
-                currentInput = currentInput.slice(0, -1);
-            } else {
-                currentInput = '0';
+            if (cursorPosition > 0) {
+                if (currentInput.length === 1) {
+                    currentInput = '0';
+                    cursorPosition = 1;
+                } else {
+                    currentInput = currentInput.slice(0, cursorPosition - 1) + currentInput.slice(cursorPosition);
+                    cursorPosition--;
+                    if (currentInput.length === 0) {
+                        currentInput = '0';
+                        cursorPosition = 1;
+                    }
+                }
             }
             updateDisplay();
         }
@@ -350,11 +404,11 @@
                 currentInput = "Error";
             }
             
+            cursorPosition = currentInput.length;
             isEvaluated = true;
             updateDisplay();
         }
 
-        // Mouse click support
         document.querySelectorAll('.btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const val = btn.getAttribute('data-val');
@@ -369,18 +423,21 @@
             });
         });
 
-        // Keyboard support
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey || e.altKey) return;
             const key = e.key;
 
             if (/[0-9.]/.test(key)) {
+                e.preventDefault();
                 appendValue(key);
             } else if (key === '*') {
+                e.preventDefault();
                 appendValue('×');
             } else if (key === '/') {
+                e.preventDefault();
                 appendValue('÷');
             } else if (['+', '-', '(', ')', '%'].includes(key)) {
+                e.preventDefault();
                 appendValue(key);
             } else if (key === 'Enter' || key === '=') {
                 e.preventDefault();
@@ -391,8 +448,22 @@
             } else if (key === 'Escape' || key.toLowerCase() === 'c' || key.toLowerCase() === 'a') {
                 e.preventDefault();
                 clearCalc(); 
+            } else if (key === 'ArrowLeft') {
+                e.preventDefault();
+                if (cursorPosition > 0) {
+                    cursorPosition--;
+                    updateDisplay();
+                }
+            } else if (key === 'ArrowRight') {
+                e.preventDefault();
+                if (cursorPosition < currentInput.length) {
+                    cursorPosition++;
+                    updateDisplay();
+                }
             }
         });
+
+        updateDisplay();
     </script>
 </body>
 </html>
