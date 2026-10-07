@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Interest Calculator</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Load Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+        }
+        
+        /* Custom scrollbar for the table */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f5f9; /* Slate 100 */
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* Slate 300 */
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* Slate 400 */
+        }
+        
+        /* Input group styling for seamless joined inputs */
+        .input-group-field {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: 0;
+        }
+        .input-group-select {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center space-y-3 mb-8">
+            <div class="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-full mb-2 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Advanced Investment Calculator</h1>
+            <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base">
+                Plan your financial future with precision. Calculate interest with regular contributions, toggle between months or years, and visualize your portfolio growth.
+            </p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- LEFT COLUMN: Inputs -->
+            <div class="w-full lg:w-1/3 xl:w-80 shrink-0 space-y-6">
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-5 pb-3 border-b border-slate-100">Parameters</h2>
+                    
+                    <form id="calculator-form" class="space-y-5">
+                        
+                        <!-- Initial Principal -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Initial Principal</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 sm:text-sm">$</span>
+                                </div>
+                                <input type="number" id="principal" value="10000" min="0" step="100" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors text-slate-900 bg-slate-50 focus:bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Interest Rate -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Annual Interest Rate</label>
+                            <div class="relative">
+                                <input type="number" id="rate" value="7.5" min="0" max="100" step="0.1" class="w-full pl-3 pr-8 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors text-slate-900 bg-slate-50 focus:bg-white">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 sm:text-sm">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Time Period (Value + Unit) -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Time Period</label>
+                            <div class="flex rounded-lg shadow-sm">
+                                <input type="number" id="timeValue" value="10" min="1" step="1" class="input-group-field flex-1 min-w-0 block w-full px-3 py-2.5 rounded-l-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors text-slate-900 bg-slate-50 focus:bg-white z-10">
+                                <select id="timeUnit" class="input-group-select flex-shrink-0 inline-flex items-center px-3 py-2.5 border border-slate-300 bg-slate-100 text-slate-700 sm:text-sm rounded-r-lg hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 cursor-pointer">
+                                    <option value="years" selected>Years</option>
+                                    <option value="months">Months</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Interest Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Interest Type</label>
+                            <select id="interestType" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors cursor-pointer">
+                                <option value="compound" selected>Compound Interest</option>
+                                <option value="simple">Simple Interest</option>
+                            </select>
+                        </div>
+
+                        <!-- Compounding Frequency -->
+                        <div id="compFreqContainer">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Compounding Frequency</label>
+                            <select id="compFreq" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors cursor-pointer">
+                                <option value="12" selected>Monthly (12/Yr)</option>
+                                <option value="4">Quarterly (4/Yr)</option>
+                                <option value="2">Semi-Annually (2/Yr)</option>
+                                <option value="1">Annually (1/Yr)</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 space-y-4">
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Regular Contributions</h3>
+                            
+                            <!-- Contribution Amount -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-slate-400 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" id="contAmount" value="500" min="0" step="50" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors text-slate-900 bg-slate-50 focus:bg-white">
+                                </div>
+                            </div>
+
+                            <!-- Contribution Frequency -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
+                                <select id="contFreq" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors cursor-pointer">
+                                    <option value="12" selected>Monthly</option>
+                                    <option value="4">Quarterly</option>
+                                    <option value="2">Semi-Annually</option>
+                                    <option value="1">Annually</option>
+                                </select>
+                            </div>
+
+                            <!-- Contribution Timing -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Timing</label>
+                                <select id="contTiming" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors cursor-pointer">
+                                    <option value="start">Beginning of Period</option>
+                                    <option value="end" selected>End of Period</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Outputs (Cards, Chart, Table) -->
+            <div class="w-full lg:flex-1 flex flex-col gap-6 min-w-0">
+                
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Total Principal Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-sky-500">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Total Principal Invested</p>
+                        <h3 class="text-2xl font-bold text-slate-900 truncate" id="display-principal">$0</h3>
+                    </div>
+                    <!-- Total Interest Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-emerald-500">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Total Interest Earned</p>
+                        <h3 class="text-2xl font-bold text-emerald-600 truncate" id="display-interest">$0</h3>
+                    </div>
+                    <!-- Final Balance Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-600">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Final Balance</p>
+                        <h3 class="text-2xl font-bold text-indigo-700 truncate" id="display-balance">$0</h3>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative flex flex-col h-[400px]">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4">Balance Accumulation Over Time</h2>
+                    <div class="flex-grow w-full relative">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Amortization Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                        <h2 class="text-lg font-semibold text-slate-800">Period-by-Period Breakdown</h2>
+                    </div>
+                    <div class="table-container overflow-x-auto overflow-y-auto max-h-[500px]">
+                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left font-semibold text-slate-600 tracking-wider">Period</th>
+                                    <th scope="col" class="px-6 py-4 text-right font-semibold text-slate-600 tracking-wider">Opening Balance</th>
+                                    <th scope="col" class="px-6 py-4 text-right font-semibold text-slate-600 tracking-wider">Contributions</th>
+                                    <th scope="col" class="px-6 py-4 text-right font-semibold text-slate-600 tracking-wider">Interest Earned</th>
+                                    <th scope="col" class="px-6 py-4 text-right font-semibold text-slate-600 tracking-wider">Closing Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-body" class="bg-white divide-y divide-slate-100">
+                                <!-- JS injected rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Number Formatters
+        const formatMoney = (amount) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(amount);
+        };
+
+        const formatMoneyDetailed = (amount) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(amount);
+        };
+
+        // DOM Elements
+        const formInputs = document.querySelectorAll('#calculator-form input, #calculator-form select');
+        const interestTypeSelect = document.getElementById('interestType');
+        const compFreqContainer = document.getElementById('compFreqContainer');
+        const tableBody = document.getElementById('schedule-body');
+        
+        let chartInstance = null;
+
+        // Initialize Chart.js Area Chart
+        function initChart() {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Total Principal Invested',
+                            data: [],
+                            borderColor: '#0ea5e9', // sky-500
+                            backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Total Interest Earned',
+                            data: [],
+                            borderColor: '#10b981', // emerald-500
+                            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { 
+                            position: 'top', 
+                            labels: { usePointStyle: true, boxWidth: 8, font: { weight: '500' } } 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)', // slate-900
+                            padding: 12,
+                            titleFont: { size: 14, weight: '600' },
+                            bodyFont: { size: 13 },
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            title: { display: true, text: 'Time Period', font: { weight: '500' } }
+                        },
+                        y: {
+                            stacked: true, // Stack Principal and Interest to show Total Balance
+                            grid: { color: '#f1f5f9', drawBorder: false }, // slate-100
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculate() {
+            // Parse and Sanitize Inputs
+            const principal = Math.max(0, parseFloat(document.getElementById('principal').value) || 0);
+            const rateAnnual = Math.max(0, (parseFloat(document.getElementById('rate').value) || 0) / 100);
+            const timeValue = Math.max(1, parseFloat(document.getElementById('timeValue').value) || 1);
+            const timeUnit = document.getElementById('timeUnit').value;
+            const interestType = document.getElementById('interestType').value;
+            const compFreq = parseInt(document.getElementById('compFreq').value) || 12;
+            
+            const contAmount = Math.max(0, parseFloat(document.getElementById('contAmount').value) || 0);
+            const contFreq = parseInt(document.getElementById('contFreq').value) || 12; // 12=Monthly, 4=Quarterly...
+            const contTiming = document.getElementById('contTiming').value;
+
+            // Handle UI logic for Compounding Frequency Visibility
+            compFreqContainer.style.display = (interestType === 'simple') ? 'none' : 'block';
+
+            // Determine Total Months for the Simulation Loop
+            // If user selects Years, multiply by 12. If Months, take as is.
+            const totalMonths = timeUnit === 'years' ? Math.floor(timeValue * 12) : Math.floor(timeValue);
+            
+            if(totalMonths === 0) return; // Prevent empty loops
+
+            // Simulation Variables
+            let currentBalance = principal;
+            let totalPrincipalInvested = principal;
+            let totalInterestEarned = 0;
+            
+            const scheduleData = [];
+
+            // Effective rates mapping
+            // Math: r_eff = (1 + r/n)^(n/12) - 1. This handles compounding mismatched with monthly simulation.
+            const r_eff_month_compound = (rateAnnual === 0) ? 0 : (Math.pow(1 + rateAnnual / compFreq, compFreq / 12) - 1);
+            const r_month_simple = rateAnnual / 12; 
+
+            // Initialize Month 0 (Start state) for Chart origin
+            scheduleData.push({
+                periodLabel: 'Start',
+                openBalance: 0,
+                contributions: principal,
+                interest: 0,
+                closeBalance: principal,
+                totalPrincipal: principal,
+                totalInterest: 0,
+                isYearEnd: false
+            });
+
+            // Trackers for current reporting period (Yearly if duration > 24 months, else Monthly/Yearly mix)
+            let periodOpenBalance = currentBalance;
+            let periodCont = 0;
+            let periodInt = 0;
+
+            // Months per contribution interval (e.g. 12 / 4 (Quarterly) = 3 months)
+            const monthsPerCont = 12 / contFreq;
+
+            // Iterate Month by Month
+            for (let m = 1; m <= totalMonths; m++) {
+                
+                // Determine if this month triggers a contribution
+                // Start of period: Month 1, 4, 7... => (m-1) % 3 === 0
+                // End of period: Month 3, 6, 9... => m % 3 === 0
+                const isContMonthStart = ((m - 1) % monthsPerCont === 0);
+                const isContMonthEnd = (m % monthsPerCont === 0);
+
+                // 1. Start of Period Contribution
+                if (contTiming === 'start' && isContMonthStart) {
+                    currentBalance += contAmount;
+                    totalPrincipalInvested += contAmount;
+                    periodCont += contAmount;
+                }
+
+                // 2. Interest Accrual
+                let monthInt = 0;
+                if (interestType === 'compound') {
+                    monthInt = currentBalance * r_eff_month_compound;
+                } else {
+                    // Simple interest applies to the principal + total contributions
+                    monthInt = totalPrincipalInvested * r_month_simple;
+                }
+                
+                currentBalance += monthInt;
+                totalInterestEarned += monthInt;
+                periodInt += monthInt;
+
+                // 3. End of Period Contribution
+                if (contTiming === 'end' && isContMonthEnd) {
+                    currentBalance += contAmount;
+                    totalPrincipalInvested += contAmount;
+                    periodCont += contAmount;
+                }
+
+                // Decide when to save a snapshot for the Table/Chart
+                // Standard: Snapshot at the end of every 12 months, OR the very last month.
+                const isYearEnd = (m % 12 === 0);
+                const isFinalMonth = (m === totalMonths);
+
+                if (isYearEnd || isFinalMonth) {
+                    let label = "";
+                    if (isYearEnd) {
+                        label = `Year ${m / 12}`;
+                    } else {
+                        // If it ends mid-year
+                        const completedYears = Math.floor(m / 12);
+                        const remainingMonths = m % 12;
+                        label = completedYears > 0 ? `Yr ${completedYears}, Mo ${remainingMonths}` : `Month ${m}`;
+                    }
+
+                    scheduleData.push({
+                        periodLabel: label,
+                        openBalance: periodOpenBalance,
+                        contributions: periodCont,
+                        interest: periodInt,
+                        closeBalance: currentBalance,
+                        totalPrincipal: totalPrincipalInvested,
+                        totalInterest: totalInterestEarned,
+                        isYearEnd: true
+                    });
+
+                    // Reset period trackers for the next period
+                    periodOpenBalance = currentBalance;
+                    periodCont = 0;
+                    periodInt = 0;
+                }
+            }
+
+            updateUI(scheduleData, totalPrincipalInvested, totalInterestEarned, currentBalance, timeUnit);
+        }
+
+        // Apply data to DOM
+        function updateUI(scheduleData, totalPrincipal, totalInterest, finalBalance, timeUnit) {
+            
+            // 1. Update Summary Cards
+            document.getElementById('display-principal').innerText = formatMoney(totalPrincipal);
+            document.getElementById('display-interest').innerText = formatMoney(totalInterest);
+            document.getElementById('display-balance').innerText = formatMoney(finalBalance);
+
+            // 2. Update Chart
+            if (chartInstance) {
+                // Filter data to only show plotted points (Years + Final snapshot)
+                const chartData = scheduleData; 
+                
+                chartInstance.data.labels = chartData.map(d => d.periodLabel);
+                chartInstance.data.datasets[0].data = chartData.map(d => d.totalPrincipal);
+                chartInstance.data.datasets[1].data = chartData.map(d => d.totalInterest);
+                
+                // Update X-Axis title dynamically
+                chartInstance.options.scales.x.title.text = (timeUnit === 'years') ? 'Timeline (Years)' : 'Timeline (Months/Years)';
+                chartInstance.update();
+            }
+
+            // 3. Update Amortization Table
+            let tableHTML = '';
+            let rowIndex = 0;
+            
+            for (let i = 1; i < scheduleData.length; i++) {
+                const d = scheduleData[i];
+                if (!d.isYearEnd) continue; // Only render finalized periods
+
+                const bgClass = (rowIndex % 2 === 0) ? 'bg-white' : 'bg-slate-50';
+                
+                tableHTML += `
+                    <tr class="${bgClass} hover:bg-indigo-50/50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-900 font-medium">${d.periodLabel}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-slate-500">${formatMoneyDetailed(d.openBalance)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sky-600 font-medium">+${formatMoneyDetailed(d.contributions)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-emerald-600 font-medium">+${formatMoneyDetailed(d.interest)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-slate-900 font-semibold">${formatMoneyDetailed(d.closeBalance)}</td>
+                    </tr>
+                `;
+                rowIndex++;
+            }
+            tableBody.innerHTML = tableHTML;
+        }
+
+        // Attach Event Listeners to all inputs for Real-time recalculation
+        formInputs.forEach(input => {
+            input.addEventListener('input', calculate);
+            if(input.tagName === 'SELECT') {
+                input.addEventListener('change', calculate);
+            }
+        });
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            calculate();
+        });
+
+    </script>
+</body>
+</html>

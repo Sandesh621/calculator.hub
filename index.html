@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator Hub</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+
+    <div class="max-w-5xl w-full space-y-12">
+        
+        <!-- Header -->
+        <div class="text-center space-y-4">
+            <div class="inline-flex items-center justify-center p-4 bg-indigo-600 rounded-2xl shadow-lg mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Calculator Hub</h1>
+            <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+                Your all-in-one toolkit for everyday math and financial planning. Select a tool below to get started.
+            </p>
+        </div>
+
+        <!-- Grid Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            
+            <!-- Tool 1: Advanced Interest Calculator -->
+            <a href="advanced_interest_calculator.html" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-3xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 hover:border-indigo-300 transition-all duration-300">
+                <div class="flex items-start gap-5">
+                    <div class="flex-shrink-0 p-4 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">Advanced Interest</h2>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Calculate compound and simple interest with regular contributions. Visualize your portfolio growth over time.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Tool 2: Percentage Calculator -->
+            <a href="percentage_calculator.html" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-3xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 hover:border-blue-300 transition-all duration-300">
+                <div class="flex items-start gap-5">
+                    <div class="flex-shrink-0 p-4 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Percentage Calculator</h2>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Quickly find percentages of numbers, calculate ratios, and determine percentage increases or decreases.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Tool 3: EMI Calculator -->
+            <a href="emi_calculator.html" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-3xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300">
+                <div class="flex items-start gap-5">
+                    <div class="flex-shrink-0 p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">EMI Calculator</h2>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Plan your loan repayments easily. Get a detailed monthly amortization schedule with visual breakdowns.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Tool 4: Basic Calculator (Now Light Themed) -->
+            <a href="Calculator.html" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-3xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 hover:border-violet-300 transition-all duration-300">
+                <div class="flex items-start gap-5">
+                    <div class="flex-shrink-0 p-4 bg-violet-50 text-violet-600 rounded-2xl group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-violet-600 transition-colors">Basic Calculator</h2>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            A sleek, light-themed simple calculator featuring a built-in history panel for your everyday math.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-slate-400 text-sm pt-8">
+            <p>Clicking any card will safely open the tool in a new tab.</p>
+        </div>
+
+    </div>
+</body>
+</html>

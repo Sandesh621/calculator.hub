@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern EMI Calculator</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+        /* Hide scrollbar for table but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8">
+
+    <div class="w-full max-w-6xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">EMI Calculator</h1>
+            <p class="mt-2 text-gray-600">Plan your loan repayment with our detailed monthly amortization schedule.</p>
+        </div>
+
+        <!-- Main Calculator Interface -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="flex flex-col lg:flex-row">
+                
+                <!-- Inputs Section -->
+                <div class="w-full lg:w-1/2 p-6 sm:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 bg-gray-50/50">
+                    <div class="space-y-8">
+                        
+                        <!-- Loan Amount Input -->
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="text-sm font-medium text-gray-700">Loan Amount</label>
+                                <div class="relative rounded-md shadow-sm w-1/3">
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" id="amount-input" class="block w-full rounded-md border-0 py-2 pl-7 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value="50000" min="1000" max="10000000" step="1000">
+                                </div>
+                            </div>
+                            <input type="range" id="amount-slider" min="1000" max="1000000" step="1000" value="50000">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                                <span>$1,000</span>
+                                <span>$1M+</span>
+                            </div>
+                        </div>
+
+                        <!-- Interest Rate Input -->
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="text-sm font-medium text-gray-700">Interest Rate (p.a.)</label>
+                                <div class="relative rounded-md shadow-sm w-1/3">
+                                    <input type="number" id="rate-input" class="block w-full rounded-md border-0 py-2 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value="6.5" min="0.1" max="30" step="0.1">
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <span class="text-gray-500 sm:text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="range" id="rate-slider" min="0.1" max="30" step="0.1" value="6.5">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                                <span>0.1%</span>
+                                <span>30%</span>
+                            </div>
+                        </div>
+
+                        <!-- Loan Tenure Input -->
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="text-sm font-medium text-gray-700">Loan Tenure</label>
+                                <div class="flex items-center space-x-2 w-1/2 justify-end">
+                                    <div class="relative rounded-md shadow-sm w-2/3">
+                                        <input type="number" id="tenure-input" class="block w-full rounded-md border-0 py-2 pl-3 pr-16 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value="5" min="1" max="30">
+                                        <div class="absolute inset-y-0 right-0 flex items-center">
+                                            <select id="tenure-unit" class="h-full rounded-md border-0 bg-transparent py-0 pl-2 pr-7 text-gray-500 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm cursor-pointer">
+                                                <option value="years">Yr</option>
+                                                <option value="months">Mo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="range" id="tenure-slider" min="1" max="30" step="1" value="5">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                                <span id="tenure-min-label">1 Year</span>
+                                <span id="tenure-max-label">30 Years</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Results & Chart Section -->
+                <div class="w-full lg:w-1/2 p-6 sm:p-10 flex flex-col justify-center items-center">
+                    
+                    <div class="text-center w-full mb-8">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly EMI</p>
+                        <h2 class="text-4xl sm:text-5xl font-bold text-indigo-600 mt-2" id="monthly-emi-display">$0</h2>
+                    </div>
+
+                    <div class="w-full max-w-[250px] aspect-square relative mb-8">
+                        <canvas id="emiChart"></canvas>
+                    </div>
+
+                    <div class="w-full grid grid-cols-2 gap-4">
+                        <div class="bg-indigo-50 p-4 rounded-xl text-center">
+                            <p class="text-xs text-gray-500 font-medium mb-1">Total Principal</p>
+                            <p class="text-lg font-bold text-gray-900" id="total-principal-display">$0</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-xl text-center">
+                            <p class="text-xs text-gray-500 font-medium mb-1">Total Interest</p>
+                            <p class="text-lg font-bold text-gray-900" id="total-interest-display">$0</p>
+                        </div>
+                        <div class="col-span-2 bg-gray-50 border border-gray-100 p-4 rounded-xl text-center">
+                            <p class="text-xs text-gray-500 font-medium mb-1">Total Payment (Principal + Interest)</p>
+                            <p class="text-xl font-bold text-gray-900" id="total-payment-display">$0</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Amortization Schedule Table -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-200 bg-white flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-semibold text-gray-900">Monthly Schedule</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <div class="max-h-[500px] overflow-y-auto no-scrollbar relative">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Month</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Opening Balance</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Principal</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Interest</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Payment</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Closing Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // DOM Elements
+        const amountInput = document.getElementById('amount-input');
+        const amountSlider = document.getElementById('amount-slider');
+        
+        const rateInput = document.getElementById('rate-input');
+        const rateSlider = document.getElementById('rate-slider');
+        
+        const tenureInput = document.getElementById('tenure-input');
+        const tenureSlider = document.getElementById('tenure-slider');
+        const tenureUnit = document.getElementById('tenure-unit');
+        const tenureMinLabel = document.getElementById('tenure-min-label');
+        const tenureMaxLabel = document.getElementById('tenure-max-label');
+
+        const monthlyEmiDisplay = document.getElementById('monthly-emi-display');
+        const totalPrincipalDisplay = document.getElementById('total-principal-display');
+        const totalInterestDisplay = document.getElementById('total-interest-display');
+        const totalPaymentDisplay = document.getElementById('total-payment-display');
+        const scheduleBody = document.getElementById('schedule-body');
+
+        // Chart Instance
+        let emiChart = null;
+
+        // Formatters
+        const currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+
+        const currencyFormatterDetailed = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
+        // Initialize Chart.js Pie Chart
+        function initChart(principal, interest) {
+            const ctx = document.getElementById('emiChart').getContext('2d');
+            
+            if(emiChart) {
+                emiChart.destroy();
+            }
+
+            emiChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Principal', 'Total Interest'],
+                    datasets: [{
+                        data: [principal, interest],
+                        backgroundColor: [
+                            '#4f46e5', // Indigo-600 for Principal
+                            '#f97316'  // Orange-500 for Interest
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += currencyFormatter.format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Core Calculation Function
+        function calculate() {
+            // Get values
+            let p = parseFloat(amountInput.value);
+            let r_annual = parseFloat(rateInput.value);
+            let tenure_val = parseFloat(tenureInput.value);
+            let isMonths = tenureUnit.value === 'months';
+
+            // Validation fallbacks
+            if (isNaN(p) || p <= 0) p = 0;
+            if (isNaN(r_annual) || r_annual < 0) r_annual = 0;
+            if (isNaN(tenure_val) || tenure_val <= 0) tenure_val = 1;
+
+            let r_monthly = r_annual / 12 / 100;
+            // Calculate total months based on the selected unit
+            let n_months = isMonths ? tenure_val : tenure_val * 12;
+
+            let emi = 0;
+            let totalPayment = 0;
+            let totalInterest = 0;
+
+            // Handle 0% interest edge case
+            if (r_monthly === 0) {
+                emi = p / n_months;
+                totalPayment = p;
+                totalInterest = 0;
+            } else if (p > 0) {
+                // Standard EMI formula: [P x R x (1+R)^N]/[(1+R)^N-1]
+                emi = (p * r_monthly * Math.pow(1 + r_monthly, n_months)) / (Math.pow(1 + r_monthly, n_months) - 1);
+                totalPayment = emi * n_months;
+                totalInterest = totalPayment - p;
+            }
+
+            // Update Summary UI
+            monthlyEmiDisplay.innerText = currencyFormatter.format(emi);
+            totalPrincipalDisplay.innerText = currencyFormatter.format(p);
+            totalInterestDisplay.innerText = currencyFormatter.format(totalInterest);
+            totalPaymentDisplay.innerText = currencyFormatter.format(totalPayment);
+
+            // Update Chart
+            initChart(p, totalInterest);
+
+            // Generate Schedule
+            generateAmortizationSchedule(p, r_monthly, n_months, emi);
+        }
+
+        // Generate Schedule Table
+        function generateAmortizationSchedule(principal, rateMonthly, months, emi) {
+            scheduleBody.innerHTML = ''; // Clear existing table
+            
+            if(principal <= 0) return;
+
+            let balance = principal;
+            let rowsHtml = '';
+            
+            // Generate rows
+            for (let month = 1; month <= months; month++) {
+                let interestForMonth = balance * rateMonthly;
+                let principalForMonth = emi - interestForMonth;
+                let openingBalance = balance;
+                
+                balance = balance - principalForMonth;
+
+                // Correct precision issues on last month
+                if(month === months || balance < 0) {
+                    principalForMonth = openingBalance;
+                    emi = principalForMonth + interestForMonth;
+                    balance = 0;
+                }
+
+                // Add yearly highlight class for better readability
+                let rowClass = (month % 12 === 0) ? 'bg-indigo-50/30' : 'bg-white hover:bg-gray-50';
+                
+                rowsHtml += `
+                    <tr class="transition-colors duration-150 ${rowClass}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${month}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${currencyFormatterDetailed.format(openingBalance)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right text-indigo-600 font-medium">${currencyFormatterDetailed.format(principalForMonth)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right text-orange-500">${currencyFormatterDetailed.format(interestForMonth)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${currencyFormatterDetailed.format(emi)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-right">${currencyFormatterDetailed.format(balance)}</td>
+                    </tr>
+                `;
+            }
+
+            // Batch DOM insertion for performance
+            scheduleBody.innerHTML = rowsHtml;
+        }
+
+        // Event Listeners for Input Synchronization and Calculation
+        function syncInputs(source, target) {
+            target.value = source.value;
+            calculate();
+        }
+
+        // Amount Sync
+        amountInput.addEventListener('input', () => syncInputs(amountInput, amountSlider));
+        amountSlider.addEventListener('input', () => syncInputs(amountSlider, amountInput));
+
+        // Rate Sync
+        rateInput.addEventListener('input', () => syncInputs(rateInput, rateSlider));
+        rateSlider.addEventListener('input', () => syncInputs(rateSlider, rateInput));
+
+        // Tenure Sync
+        tenureInput.addEventListener('input', () => syncInputs(tenureInput, tenureSlider));
+        tenureSlider.addEventListener('input', () => syncInputs(tenureSlider, tenureInput));
+
+        // Tenure Unit Change Listener
+        tenureUnit.addEventListener('change', () => {
+            let isMonths = tenureUnit.value === 'months';
+            let currentValue = parseFloat(tenureInput.value) || 1;
+
+            if (isMonths) {
+                // Switch constraints to Months
+                tenureInput.max = 360;
+                tenureSlider.max = 360;
+                
+                // Convert current value from Years to Months
+                let newVal = currentValue * 12;
+                tenureInput.value = newVal;
+                tenureSlider.value = newVal;
+
+                tenureMinLabel.innerText = "1 Month";
+                tenureMaxLabel.innerText = "360 Months";
+            } else {
+                // Switch constraints to Years
+                tenureInput.max = 30;
+                tenureSlider.max = 30;
+
+                // Convert current value from Months to Years
+                let newVal = Math.max(1, Math.floor(currentValue / 12));
+                tenureInput.value = newVal;
+                tenureSlider.value = newVal;
+
+                tenureMinLabel.innerText = "1 Year";
+                tenureMaxLabel.innerText = "30 Years";
+            }
+            calculate();
+        });
+
+        // Initial Calculation on Load
+        window.onload = () => {
+            calculate();
+        };
+
+    </script>
+</body>
+</html>
