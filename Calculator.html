@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Light Simple Calculator</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* light slate bg */
+            color: #1e293b; /* dark slate text */
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .calculator-container {
+            background-color: #ffffff;
+            border-radius: 2.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 360px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .display-area {
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding: 0.5rem;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .btn {
+            background-color: #f8fafc; /* very light gray */
+            color: #334155;
+            border-radius: 1.25rem;
+            border: 1px solid #f1f5f9;
+            font-size: 1.5rem;
+            font-weight: 400;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            aspect-ratio: 1 / 1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+            background-color: #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .btn.operator {
+            background-color: #f1f5f9;
+            color: #059669; /* Emerald */
+            font-weight: 500;
+        }
+
+        .btn.action {
+            background-color: #f1f5f9;
+            color: #e11d48; /* Rose */
+            font-weight: 500;
+        }
+
+        .btn.special {
+            background-color: #f1f5f9;
+            color: #2563eb; /* Blue */
+            font-weight: 500;
+        }
+
+        .btn.equals {
+            background-color: #10b981;
+            color: #ffffff;
+            border-radius: 1.25rem;
+            aspect-ratio: auto;
+            height: 100%;
+            border: none;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn.equals:active {
+            background-color: #059669;
+        }
+
+        #history-panel {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container relative overflow-hidden">
+        
+        <!-- History Toggle Button (Top Left) -->
+        <button id="history-toggle" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="View History">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+        </button>
+
+        <!-- Edit Last Calculation Button (Top Right) -->
+        <button id="edit-last" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="Edit Last Calculation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+        </button>
+
+        <!-- Display Area -->
+        <div class="display-area mt-4">
+            <div id="display" class="text-5xl font-light w-full text-right overflow-x-auto whitespace-nowrap scrollbar-hide tracking-wide transition-all duration-100 ease-in-out text-slate-900">0</div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-3">
+            <!-- Row 1 -->
+            <button class="btn action text-2xl" data-action="clear">AC</button>
+            <button class="btn special text-2xl" data-val="(">(</button>
+            <button class="btn special text-2xl" data-val=")">)</button>
+            <button class="btn action text-2xl" data-action="backspace">⌫</button>
+
+            <!-- Row 2 -->
+            <button class="btn" data-val="7">7</button>
+            <button class="btn" data-val="8">8</button>
+            <button class="btn" data-val="9">9</button>
+            <button class="btn operator text-3xl pb-1" data-val="÷">÷</button>
+
+            <!-- Row 3 -->
+            <button class="btn" data-val="4">4</button>
+            <button class="btn" data-val="5">5</button>
+            <button class="btn" data-val="6">6</button>
+            <button class="btn operator text-3xl pb-1" data-val="×">×</button>
+
+            <!-- Row 4 -->
+            <button class="btn" data-val="1">1</button>
+            <button class="btn" data-val="2">2</button>
+            <button class="btn" data-val="3">3</button>
+            <button class="btn operator text-4xl pb-1" data-val="-">-</button>
+
+            <!-- Row 5 -->
+            <button class="btn special text-2xl" data-val="%">%</button>
+            <button class="btn" data-val="0">0</button>
+            <button class="btn text-3xl pb-2" data-val=".">.</button>
+            <button class="btn operator text-3xl pb-1" data-val="+">+</button>
+            
+            <!-- Row 6 -->
+            <div class="col-span-4 h-14 mt-1">
+                <button class="btn equals text-4xl w-full" data-action="evaluate">=</button>
+            </div>
+        </div>
+
+        <!-- History Overlay Panel -->
+        <div id="history-panel" class="absolute inset-0 bg-white/95 backdrop-blur-md z-20 flex flex-col p-6 translate-y-full rounded-[2.5rem] border border-slate-100 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-medium text-slate-900">History</h3>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs text-emerald-600 font-medium">Tap item to edit</span>
+                    <button id="close-history" class="text-slate-400 hover:text-slate-800 p-2 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto text-right flex flex-col gap-2 scrollbar-hide pb-4">
+                <!-- History Items Render Here -->
+                <div class="text-slate-400 text-center mt-10">No history yet</div>
+            </div>
+            <button id="clear-history" class="w-full py-3 rounded-xl bg-rose-50 text-rose-600 font-medium hover:bg-rose-100 transition-colors mt-auto hidden">
+                Clear History
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const historyPanel = document.getElementById('history-panel');
+        const historyList = document.getElementById('history-list');
+        const clearHistoryBtn = document.getElementById('clear-history');
+        const editLastBtn = document.getElementById('edit-last');
+        
+        let currentInput = '0';
+        let isEvaluated = false;
+        let historyData = [];
+
+        // UI toggles
+        function toggleHistory() {
+            historyPanel.classList.toggle('translate-y-full');
+        }
+        document.getElementById('history-toggle').addEventListener('click', toggleHistory);
+        document.getElementById('close-history').addEventListener('click', toggleHistory);
+
+        // Edit functionality for the specific Last button
+        editLastBtn.addEventListener('click', () => {
+            if (historyData.length > 0) {
+                const lastItem = historyData[historyData.length - 1];
+                currentInput = lastItem.expression.replace(/ =$/, '');
+                isEvaluated = false;
+                updateDisplay();
+            }
+        });
+
+        // Edit functionality for selected history item
+        historyList.addEventListener('click', (e) => {
+            const itemElement = e.target.closest('.history-item');
+            if (itemElement) {
+                const index = itemElement.getAttribute('data-index');
+                const selectedItem = historyData[index];
+                
+                // Load expression back to display
+                currentInput = selectedItem.expression.replace(/ =$/, '');
+                isEvaluated = false;
+                
+                updateDisplay();
+                toggleHistory(); // Close panel so user can edit right away
+            }
+        });
+
+        function updateDisplay() {
+            // Dynamically scale text down as the input gets longer
+            display.classList.remove('text-5xl', 'text-4xl', 'text-3xl', 'text-2xl', 'text-xl');
+            
+            const len = currentInput.length;
+            if (len > 22) {
+                display.classList.add('text-xl');
+            } else if (len > 15) {
+                display.classList.add('text-2xl');
+            } else if (len > 11) {
+                display.classList.add('text-3xl');
+            } else if (len > 8) {
+                display.classList.add('text-4xl');
+            } else {
+                display.classList.add('text-5xl');
+            }
+
+            display.innerText = currentInput;
+
+            requestAnimationFrame(() => {
+                display.scrollLeft = display.scrollWidth;
+            });
+        }
+
+        function renderHistory() {
+            if (historyData.length === 0) {
+                historyList.innerHTML = '<div class="text-slate-400 text-center mt-10">No history yet</div>';
+                clearHistoryBtn.classList.add('hidden');
+            } else {
+                historyList.innerHTML = historyData.map((item, index) => `
+                    <div class="history-item cursor-pointer hover:bg-slate-50 p-3 -mx-3 rounded-xl transition-colors border-b border-slate-100 last:border-0" data-index="${index}">
+                        <div class="text-slate-500 text-sm pointer-events-none">${item.expression}</div>
+                        <div class="text-2xl text-slate-800 font-semibold pointer-events-none">${item.result}</div>
+                    </div>
+                `).join('');
+                clearHistoryBtn.classList.remove('hidden');
+                historyList.scrollTop = historyList.scrollHeight;
+            }
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            historyData = [];
+            renderHistory();
+        });
+
+        function appendValue(val) {
+            if (isEvaluated) {
+                if (/[0-9(%]/.test(val)) {
+                    currentInput = val;
+                } else {
+                    currentInput += val;
+                }
+                isEvaluated = false;
+            } else {
+                if (currentInput === '0' && val !== '.' && !['+', '-', '×', '÷', '%'].includes(val)) {
+                    currentInput = val;
+                } else {
+                    currentInput += val;
+                }
+            }
+            updateDisplay();
+        }
+
+        function clearCalc() {
+            currentInput = '0';
+            isEvaluated = false;
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (isEvaluated) {
+                clearCalc();
+                return;
+            }
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function evaluateExpression() {
+            if (!currentInput || currentInput === '0') return;
+
+            const expressionRecord = currentInput + ' ='; 
+
+            try {
+                let mathExpression = currentInput
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/%/g, '/100');
+
+                if (/[^0-9+\-*/().% ]/.test(mathExpression)) {
+                    throw new Error("Invalid characters");
+                }
+
+                let result = new Function('return ' + mathExpression)();
+                
+                if (!isFinite(result) || isNaN(result)) {
+                    currentInput = "Error";
+                } else {
+                    result = parseFloat(result.toFixed(10));
+                    historyData.push({ expression: expressionRecord, result: result.toString() });
+                    renderHistory();
+                    currentInput = result.toString();
+                }
+            } catch (error) {
+                currentInput = "Error";
+            }
+            
+            isEvaluated = true;
+            updateDisplay();
+        }
+
+        // Mouse click support
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.getAttribute('data-val');
+                const action = btn.getAttribute('data-action');
+
+                if (action === 'clear') clearCalc();
+                else if (action === 'backspace') backspace();
+                else if (action === 'evaluate') evaluateExpression();
+                else if (val) appendValue(val);
+                
+                btn.blur(); 
+            });
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            const key = e.key;
+
+            if (/[0-9.]/.test(key)) {
+                appendValue(key);
+            } else if (key === '*') {
+                appendValue('×');
+            } else if (key === '/') {
+                appendValue('÷');
+            } else if (['+', '-', '(', ')', '%'].includes(key)) {
+                appendValue(key);
+            } else if (key === 'Enter' || key === '=') {
+                e.preventDefault();
+                evaluateExpression();
+            } else if (key === 'Backspace') {
+                e.preventDefault();
+                backspace();
+            } else if (key === 'Escape' || key.toLowerCase() === 'c' || key.toLowerCase() === 'a') {
+                e.preventDefault();
+                clearCalc(); 
+            }
+        });
+    </script>
+</body>
+</html>
