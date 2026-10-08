@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
@@ -15,9 +15,11 @@
             color: #1e293b;
             margin: 0;
             display: flex;
+            flex-direction: column; /* Stacks header and calculator */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 2rem 1rem;
             touch-action: manipulation;
             user-select: none;
         }
@@ -109,15 +111,14 @@
             display: none;
         }
 
-        /* --- Updated Cursor Styles --- */
         .cursor-blink {
             display: inline-block;
-            width: 1px; /* Thinner cursor */
+            width: 1px;
             height: 1.1em;
             background-color: currentColor;
             animation: blink 1s step-end infinite;
             vertical-align: text-bottom;
-            margin-right: -1px; /* Neutralizes the width to exactly 0px layout space */
+            margin-right: -1px;
             transform: translateY(-0.05em);
             pointer-events: none;
             position: relative;
@@ -137,6 +138,27 @@
 </head>
 <body>
 
+    <!-- Stylish Header Above Calculator -->
+    <div class="text-center space-y-2 mb-8">
+        <div class="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-full mb-2 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="18"></line>
+                <line x1="16" y1="10" x2="16" y2="10"></line>
+                <line x1="8" y1="10" x2="8" y2="10"></line>
+                <line x1="8" y1="14" x2="8" y2="14"></line>
+                <line x1="8" y1="18" x2="8" y2="18"></line>
+                <line x1="12" y1="10" x2="12" y2="10"></line>
+                <line x1="12" y1="14" x2="12" y2="14"></line>
+                <line x1="12" y1="18" x2="12" y2="18"></line>
+            </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">Simple Calculator</h1>
+        <p class="text-slate-500 text-sm sm:text-base">Calculate numbers quickly and paste values directly.</p>
+    </div>
+
+    <!-- Calculator Container -->
     <div class="calculator-container relative overflow-hidden">
         
         <button id="history-toggle" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="View History">
@@ -409,6 +431,34 @@
             updateDisplay();
         }
 
+        // --- PASTE FUNCTIONALITY ADDED HERE ---
+        document.addEventListener('paste', (e) => {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            
+            // Format incoming symbols to match calculator operators
+            let formattedText = pastedText.replace(/\*/g, '×').replace(/\//g, '÷');
+            
+            // Filter everything out except valid calculator characters
+            const validText = formattedText.replace(/[^0-9.×÷+\-()%]/g, '');
+            
+            if (!validText) return; // Ignore if no valid math characters were pasted
+
+            if (isEvaluated) {
+                currentInput = validText;
+                cursorPosition = currentInput.length;
+                isEvaluated = false;
+            } else {
+                if (currentInput === '0' && cursorPosition === 1 && !['+', '-', '×', '÷', '%'].includes(validText[0])) {
+                    currentInput = validText;
+                    cursorPosition = validText.length;
+                } else {
+                    currentInput = currentInput.slice(0, cursorPosition) + validText + currentInput.slice(cursorPosition);
+                    cursorPosition += validText.length;
+                }
+            }
+            updateDisplay();
+        });
+
         document.querySelectorAll('.btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const val = btn.getAttribute('data-val');
@@ -424,7 +474,7 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return; // Note: Allows standard 'paste' shortcut to bypass this
             const key = e.key;
 
             if (/[0-9.]/.test(key)) {
