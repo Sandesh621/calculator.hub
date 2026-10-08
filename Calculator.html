@@ -15,7 +15,7 @@
             color: #1e293b;
             margin: 0;
             display: flex;
-            flex-direction: column; /* Stacks header and calculator */
+            flex-direction: column; 
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -47,6 +47,17 @@
             word-wrap: break-word;
             word-break: break-all;
             cursor: text;
+            caret-color: transparent;
+            -webkit-user-select: text; 
+            user-select: text;
+        }
+
+        .display-area:focus {
+            outline: none;
+        }
+
+        .display-area *::selection {
+            background: transparent;
         }
 
         .btn {
@@ -111,14 +122,14 @@
             display: none;
         }
 
+        /* Fixed cursor to use a consistent 1px border instead of an inline block width */
         .cursor-blink {
             display: inline-block;
-            width: 1px;
+            width: 0px; 
+            border-left: 1px solid currentColor;
             height: 1.1em;
-            background-color: currentColor;
             animation: blink 1s step-end infinite;
             vertical-align: text-bottom;
-            margin-right: -1px;
             transform: translateY(-0.05em);
             pointer-events: none;
             position: relative;
@@ -138,7 +149,6 @@
 </head>
 <body>
 
-    <!-- Stylish Header Above Calculator -->
     <div class="text-center space-y-2 mb-8">
         <div class="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-full mb-2 shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600">
@@ -158,7 +168,6 @@
         <p class="text-slate-500 text-sm sm:text-base">Calculate numbers quickly and paste values directly.</p>
     </div>
 
-    <!-- Calculator Container -->
     <div class="calculator-container relative overflow-hidden">
         
         <button id="history-toggle" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition-colors z-10" aria-label="View History">
@@ -175,8 +184,8 @@
             </svg>
         </button>
 
-        <div id="display-area" class="display-area mt-4">
-            <div id="display" class="text-5xl font-light w-full text-right overflow-x-auto whitespace-nowrap scrollbar-hide tracking-wide transition-all duration-100 ease-in-out text-slate-900">0</div>
+        <div id="display-area" class="display-area mt-4" contenteditable="true" inputmode="none" spellcheck="false" tabindex="0">
+            <div id="display" class="text-5xl font-light w-full text-right overflow-x-auto whitespace-nowrap scrollbar-hide tracking-wide transition-all duration-100 ease-in-out text-slate-900 pointer-events-none">0</div>
         </div>
 
         <div class="grid grid-cols-4 gap-3">
@@ -233,6 +242,7 @@
     </div>
 
     <script>
+        const displayArea = document.getElementById('display-area');
         const display = document.getElementById('display');
         const historyPanel = document.getElementById('history-panel');
         const historyList = document.getElementById('history-list');
@@ -250,10 +260,18 @@
         document.getElementById('history-toggle').addEventListener('click', toggleHistory);
         document.getElementById('close-history').addEventListener('click', toggleHistory);
 
-        document.getElementById('display-area').addEventListener('click', (e) => {
+        displayArea.addEventListener('click', (e) => {
+            displayArea.focus();
+            
             if (!e.target.closest('.char')) {
                 cursorPosition = currentInput.length;
                 updateDisplay();
+            }
+        });
+
+        displayArea.addEventListener('beforeinput', (e) => {
+            if (e.inputType !== 'insertFromPaste') {
+                e.preventDefault();
             }
         });
 
@@ -294,10 +312,10 @@
             let newHTML = '';
             for (let i = 0; i <= currentInput.length; i++) {
                 if (i === cursorPosition) {
-                    newHTML += `<span class="cursor-blink"></span>`;
+                    newHTML += `<span class="cursor-blink pointer-events-none"></span>`;
                 }
                 if (i < currentInput.length) {
-                    newHTML += `<span class="char" data-index="${i}">${currentInput[i]}</span>`;
+                    newHTML += `<span class="char pointer-events-auto" data-index="${i}">${currentInput[i]}</span>`;
                 }
             }
             display.innerHTML = newHTML;
@@ -306,6 +324,8 @@
             chars.forEach(char => {
                 char.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    displayArea.focus();
+                    
                     const idx = parseInt(char.getAttribute('data-index'));
                     const rect = char.getBoundingClientRect();
                     const clickX = e.clientX;
@@ -431,17 +451,14 @@
             updateDisplay();
         }
 
-        // --- PASTE FUNCTIONALITY ADDED HERE ---
         document.addEventListener('paste', (e) => {
+            e.preventDefault(); 
+            
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-            
-            // Format incoming symbols to match calculator operators
             let formattedText = pastedText.replace(/\*/g, '×').replace(/\//g, '÷');
-            
-            // Filter everything out except valid calculator characters
             const validText = formattedText.replace(/[^0-9.×÷+\-()%]/g, '');
             
-            if (!validText) return; // Ignore if no valid math characters were pasted
+            if (!validText) return; 
 
             if (isEvaluated) {
                 currentInput = validText;
@@ -474,7 +491,7 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey || e.altKey) return; // Note: Allows standard 'paste' shortcut to bypass this
+            if (e.ctrlKey || e.metaKey || e.altKey) return; 
             const key = e.key;
 
             if (/[0-9.]/.test(key)) {
