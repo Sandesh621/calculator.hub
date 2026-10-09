@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2EE Secure P2P Chat (Signal-Style ECDH)</title>
+    <!-- PeerJS for WebRTC Signaling via Connection Codes -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --panel-bg: rgba(255, 255, 255, 0.7);
+            --border: rgba(255, 255, 255, 0.5);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --text: #334155;
+            --text-muted: #64748b;
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text);
+            background: linear-gradient(-45deg, #e0e7ff, #f3e8ff, #ede9fe, #f1f5f9);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        h2 { margin: 0 0 5px 0; font-size: 1.5rem; color: #1e293b; }
+        p.subtitle { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+        .setup-screen {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 { margin-top: 0; color: var(--primary); }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        button:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        }
+        button:disabled { 
+            background: #cbd5e1; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
+
+        .chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .status-bar {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fingerprint-badge {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #475569;
+            cursor: help;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            line-height: 1.4;
+        }
+
+        .message.self {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.peer {
+            align-self: flex-start;
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            align-self: center;
+            background: rgba(241, 245, 249, 0.8);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-radius: 20px;
+            padding: 6px 12px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .input-area {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input[type="text"] { margin-bottom: 0; flex: 1; }
+        .input-area button { width: auto; padding: 10px 24px; margin: 0; }
+        
+        .file-label {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+        .file-label:hover { background: #f8fafc; border-color: var(--primary); }
+        #file-input { display: none; }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+            height: 6px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        .download-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .message.self .download-btn { background: rgba(255,255,255,0.2); }
+
+        #secure-warning {
+            display: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fca5a5;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Secure P2P Connect</h2>
+        <p class="subtitle">ECDH Key Exchange • AES-GCM Encrypted</p>
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen" class="setup-screen">
+        <div id="secure-warning">
+            <strong>Security Error:</strong> This app requires a secure context (HTTPS or localhost) to generate military-grade encryption keys. Please access this app via an HTTPS URL.
+        </div>
+
+        <div class="card">
+            <h3>1. Create a Room (Host)</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">
+                Encryption keys are generated automatically using Elliptic Curve Diffie-Hellman.
+            </p>
+            <button id="btn-host" onclick="startHost()">Generate Connection Code</button>
+            <div id="host-code-display" style="display:none; margin-top:15px; text-align:center;">
+                <label>Give this code to your peer:</label>
+                <h2 id="generated-code" style="letter-spacing: 4px; color: var(--primary); user-select: all; background: white; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1;">---</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Waiting for peer to connect...</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: var(--text-muted); font-weight: 500;">— OR —</div>
+
+        <div class="card">
+            <h3>2. Join a Room (Peer)</h3>
+            <label>Connection Code:</label>
+            <input type="text" id="join-code" placeholder="Enter 6-character code" style="text-transform: uppercase;">
+            <button id="btn-join" onclick="joinRoom()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Secure Connect</button>
+        </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="chat-screen" class="chat-screen">
+        <div class="status-bar">
+            <span style="color: var(--success);">🔒 E2EE Active</span>
+            <span class="fingerprint-badge" id="fingerprint-display" title="Compare this Safety Number with your peer to ensure connection is secure.">---</span>
+        </div>
+        <div id="messages" class="messages">
+            <div class="message system">Negotiating Elliptic Curve cryptographic keys...</div>
+        </div>
+        <div class="input-area" id="input-area" style="display: none;">
+            <label class="file-label" title="Send File (up to 500MB)">
+                📎
+                <input type="file" id="file-input" onchange="startFileTransfer(this.files[0])">
+            </label>
+            <input type="text" id="msg-input" placeholder="Type an encrypted message..." onkeypress="handleEnter(event)">
+            <button onclick="sendTextMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Security Context Check
+    if (!window.isSecureContext) {
+        document.getElementById('secure-warning').style.display = 'block';
+        document.querySelectorAll('button').forEach(b => b.disabled = true);
+    }
+
+    // ISP Traversal TURN Servers Configuration
+    const peerConfig = {
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' },
+                { 
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                { 
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
+            ]
+        }
+    };
+
+    let peer = null;
+    let conn = null;
+    let localKeyPair = null;
+    let cryptoKey = null; // AES-GCM Shared Secret Key
+    let isHost = false;
+
+    // File Transfer State (Receiver)
+    let receivingFiles = {};
+
+    const setupScreen = document.getElementById('setup-screen');
+    const chatScreen = document.getElementById('chat-screen');
+    const messagesDiv = document.getElementById('messages');
+    
+    // --- 1. CRYPTOGRAPHY (ECDH Handshake & AES-GCM) ---
+
+    // Generate local P-256 Key Pair for Diffie-Hellman
+    async function generateECDHKeyPair() {
+        return await crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" },
+            true, ["deriveBits", "deriveKey"]
+        );
+    }
+
+    // Derive Shared Secret Key from Local Private & Peer Public Key
+    async function deriveSharedSecret(localPrivateKey, peerPublicKeyBuffer) {
+        const peerPublicKey = await crypto.subtle.importKey(
+            "raw", peerPublicKeyBuffer,
+            { name: "ECDH", namedCurve: "P-256" },
+            true, []
+        );
+
+        // Derive AES-GCM 256-bit Key
+        const derivedKey = await crypto.subtle.deriveKey(
+            { name: "ECDH", public: peerPublicKey },
+            localPrivateKey,
+            { name: "AES-GCM", length: 256 },
+            true, ["encrypt", "decrypt"]
+        );
+
+        // Generate Signal-Style Fingerprint (Safety Number)
+        const sharedBits = await crypto.subtle.deriveBits(
+            { name: "ECDH", public: peerPublicKey },
+            localPrivateKey, 256
+        );
+        const hashBuffer = await crypto.subtle.digest('SHA-256', sharedBits);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        const fingerprint = hex.substring(0, 4).toUpperCase() + '-' + hex.substring(4, 8).toUpperCase();
+        
+        document.getElementById('fingerprint-display').innerText = `SN: ${fingerprint}`;
+        
+        return derivedKey;
+    }
+
+    async function encryptData(dataArrayBuffer) {
+        if (!cryptoKey) throw new Error("Key not negotiated");
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ciphertext = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv }, cryptoKey, dataArrayBuffer
+        );
+        return { iv: iv, ciphertext: ciphertext };
+    }
+
+    async function decryptData(iv, ciphertext) {
+        if (!cryptoKey) throw new Error("Key not negotiated");
+        return await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: new Uint8Array(iv) }, cryptoKey, ciphertext
+        );
+    }
+
+
+    // --- 2. WEBRTC & SIGNALING ---
+
+    async function startHost() {
+        document.getElementById('btn-host').disabled = true;
+        
+        // Generate ECDH Keys
+        localKeyPair = await generateECDHKeyPair();
+        
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        document.getElementById('host-code-display').style.display = 'block';
+        document.getElementById('generated-code').innerText = code;
+
+        isHost = true;
+        peer = new Peer(code, peerConfig);
+
+        peer.on('connection', (connection) => {
+            conn = connection;
+            setupDataChannel();
+        });
+
+        peer.on('error', (err) => {
+            alert("Connection error: " + err.type);
+            document.getElementById('btn-host').disabled = false;
+        });
+    }
+
+    async function joinRoom() {
+        const code = document.getElementById('join-code').value.toUpperCase();
+        if (!code) return alert("Code is required!");
+        
+        document.getElementById('btn-join').disabled = true;
+        document.getElementById('btn-join').innerText = "Generating Keys...";
+
+        // Generate ECDH Keys
+        localKeyPair = await generateECDHKeyPair();
+
+        isHost = false;
+        peer = new Peer(peerConfig);
+        
+        peer.on('open', () => {
+            document.getElementById('btn-join').innerText = "Connecting via TURN...";
+            conn = peer.connect(code, { reliable: true });
+            setupDataChannel();
+        });
+
+        peer.on('error', (err) => {
+            alert("Connection error. Ensure the host is waiting.");
+            document.getElementById('btn-join').disabled = false;
+            document.getElementById('btn-join').innerText = "Secure Connect";
+        });
+    }
+
+    function setupDataChannel() {
+        conn.on('open', async () => {
+            setupScreen.style.display = 'none';
+            chatScreen.style.display = 'flex';
+            
+            // Initiate Cryptographic Handshake (Peer sends key first, or both send simultaneously)
+            const publicKeyRaw = await crypto.subtle.exportKey("raw", localKeyPair.publicKey);
+            conn.send({
+                type: 'handshake',
+                publicKey: publicKeyRaw
+            });
+        });
+
+        conn.on('data', async (payload) => {
+            try {
+                // 1. Handle Cryptographic Handshake
+                if (payload.type === 'handshake') {
+                    cryptoKey = await deriveSharedSecret(localKeyPair.privateKey, payload.publicKey);
+                    
+                    document.getElementById('input-area').style.display = 'flex';
+                    messagesDiv.innerHTML = ''; // Clear negotiation message
+                    appendMessage("Cryptographic session established. Messages are secure.", 'system');
+                    
+                    // If Host receives peer key, reply with host key
+                    if (isHost) {
+                        const publicKeyRaw = await crypto.subtle.exportKey("raw", localKeyPair.publicKey);
+                        conn.send({ type: 'handshake', publicKey: publicKeyRaw });
+                    }
+                    return;
+                }
+
+                // Ensure key is negotiated before decrypting
+                if (!cryptoKey) return;
+
+                // 2. Decrypt incoming data
+                const decryptedBuffer = await decryptData(payload.iv, payload.ciphertext);
+                
+                if (payload.type === 'text') {
+                    const text = new TextDecoder().decode(decryptedBuffer);
+                    appendMessage(text, 'peer');
+                } 
+                else if (payload.type === 'file-chunk') {
+                    handleIncomingChunk(payload.fileId, payload.fileName, payload.fileType, payload.chunkIndex, payload.totalChunks, decryptedBuffer);
+                }
+            } catch (err) {
+                console.error(err);
+                appendMessage("⚠️ Decryption failed or malformed data received.", 'system');
+            }
+        });
+
+        conn.on('close', () => {
+            appendMessage("Peer disconnected. Session ended.", 'system');
+            document.getElementById('input-area').style.display = 'none';
+        });
+    }
+
+
+    // --- 3. UI AND MESSAGING LOGIC ---
+
+    async function sendTextMessage() {
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        if (!text || !conn || !conn.open || !cryptoKey) return;
+
+        input.value = '';
+        appendMessage(text, 'self');
+
+        const dataBuffer = new TextEncoder().encode(text);
+        const encrypted = await encryptData(dataBuffer);
+        
+        conn.send({
+            type: 'text',
+            iv: encrypted.iv,
+            ciphertext: encrypted.ciphertext
+        });
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendTextMessage();
+    }
+
+    function appendMessage(text, senderClass) {
+        const div = document.createElement('div');
+        div.className = `message ${senderClass}`;
+        div.textContent = text;
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+
+    // --- 4. CHUNKED FILE TRANSFER (Mobile Safe) ---
+
+    async function startFileTransfer(file) {
+        if (!file || !conn || !conn.open || !cryptoKey) return;
+        
+        const fileId = Math.random().toString(36).substring(7);
+        const chunkSize = 64 * 1024; // 64KB chunks for mobile memory safety
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        
+        // Create UI for sender
+        const uiId = 'file-' + fileId;
+        appendFileProgressUI(uiId, file.name, 'self');
+        document.getElementById('file-input').value = ""; 
+
+        let offset = 0;
+        let chunkIndex = 0;
+
+        // Read and send loop
+        while (offset < file.size) {
+            const chunkBlob = file.slice(offset, offset + chunkSize);
+            const arrayBuffer = await chunkBlob.arrayBuffer();
+            
+            // Encrypt Chunk
+            const encrypted = await encryptData(arrayBuffer);
+
+            // Wait if WebRTC buffer is full (Mobile fix)
+            while (conn.dataChannel.bufferedAmount > 1024 * 1024) {
+                await new Promise(r => setTimeout(r, 50)); 
+            }
+
+            conn.send({
+                type: 'file-chunk',
+                fileId: fileId,
+                fileName: file.name,
+                fileType: file.type,
+                chunkIndex: chunkIndex,
+                totalChunks: totalChunks,
+                iv: encrypted.iv,
+                ciphertext: encrypted.ciphertext
+            });
+
+            offset += chunkSize;
+            chunkIndex++;
+            updateProgressUI(uiId, (chunkIndex / totalChunks) * 100);
+        }
+
+        // Complete UI for Sender
+        const localUrl = URL.createObjectURL(file);
+        finishProgressUI(uiId, localUrl, file.name);
+    }
+
+    function handleIncomingChunk(fileId, fileName, fileType, chunkIndex, totalChunks, decryptedBuffer) {
+        if (!receivingFiles[fileId]) {
+            receivingFiles[fileId] = { buffers: [], uiId: 'recv-' + fileId };
+            appendFileProgressUI(receivingFiles[fileId].uiId, fileName, 'peer');
+        }
+
+        receivingFiles[fileId].buffers[chunkIndex] = decryptedBuffer;
+        
+        const receivedCount = receivingFiles[fileId].buffers.filter(Boolean).length;
+        updateProgressUI(receivingFiles[fileId].uiId, (receivedCount / totalChunks) * 100);
+
+        if (receivedCount === totalChunks) {
+            const blob = new Blob(receivingFiles[fileId].buffers, { type: fileType });
+            const url = URL.createObjectURL(blob);
+            finishProgressUI(receivingFiles[fileId].uiId, url, fileName);
+            delete receivingFiles[fileId]; // Free RAM
+        }
+    }
+
+    // --- FILE TRANSFER UI HELPERS ---
+
+    function appendFileProgressUI(id, fileName, senderClass) {
+        const div = document.createElement('div');
+        div.className = `message ${senderClass}`;
+        div.id = id;
+        div.innerHTML = `
+            <strong>File:</strong> ${fileName}<br>
+            <span style="font-size: 0.8rem;" id="${id}-text">Transferring...</span>
+            <div class="progress-container">
+                <div class="progress-bar" id="${id}-bar"></div>
+            </div>
+        `;
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function updateProgressUI(id, percentage) {
+        const bar = document.getElementById(`${id}-bar`);
+        const text = document.getElementById(`${id}-text`);
+        if (bar) bar.style.width = `${percentage}%`;
+        if (text) text.innerText = `${Math.round(percentage)}% Encrypted & Sent`;
+    }
+
+    function finishProgressUI(id, url, fileName) {
+        const div = document.getElementById(id);
+        if (!div) return;
+        div.innerHTML = `
+            <strong>File:</strong> ${fileName}<br>
+            <a href="${url}" download="${fileName}" class="download-btn">⬇️ Download Securely</a>
+        `;
+    }
+</script>
+</body>
+</html>
